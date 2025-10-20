@@ -1,0 +1,10 @@
+## 🧩 Import Rules
+- **Never create duplicate imports** from the same module.  
+  If an import already exists, **extend** it.
+  ```ts
+  // ✅ Correct
+  import { Layout, Drawer } from "antd";
+
+  // ❌ Wrong
+  import { Layout } from "antd";
+  import { Drawer } from "antd";
