@@ -1,0 +1,322 @@
+:root {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  background-color: #f5f7fb;
+  color: #1f2933;
+  line-height: 1.5;
+  --background: #f5f7fb;
+  --surface: #ffffff;
+  --text: #1f2933;
+  --text-muted: #52606d;
+  --border: #d9e2ec;
+  --accent: #2563eb;
+  --accent-active: #1d4ed8;
+  --danger: #dc2626;
+  --completed: #9aa5b1;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background, #f5f7fb);
+  padding: 2.5rem 1rem;
+  color: var(--text);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app {
+  width: min(640px, 100%);
+  background-color: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+  padding: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.app-header {
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.6rem);
+}
+
+.app-subtitle {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.todo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.todo-input-label {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.todo-form-field {
+  position: relative;
+}
+
+.todo-form-field input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.todo-form-field input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+.todo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.todo-count {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.todo-filters {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.filter-button {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 2.5rem;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.filter-button:hover,
+.filter-button:focus-visible {
+  outline: none;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.filter-button.is-active {
+  background-color: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.filter-button.is-active:focus-visible {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4);
+}
+
+.todo-clear {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 2.5rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.todo-clear:disabled {
+  cursor: not-allowed;
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.todo-clear:not(:disabled):hover,
+.todo-clear:not(:disabled):focus-visible {
+  outline: none;
+  background-color: rgba(37, 99, 235, 0.12);
+}
+
+.todo-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.todo-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background-color: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.todo-item:hover,
+.todo-item:focus-within {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+}
+
+.todo-item.is-completed .todo-text {
+  text-decoration: line-through;
+  color: var(--completed);
+}
+
+.todo-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.todo-toggle {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.todo-label {
+  flex: 1;
+  display: block;
+}
+
+.todo-text {
+  display: block;
+  word-break: break-word;
+}
+
+.todo-edit-input {
+  display: none;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.todo-edit-input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+.todo-edit-input[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3);
+}
+
+.todo-item.is-editing .todo-label {
+  display: none;
+}
+
+.todo-item.is-editing .todo-edit-input {
+  display: block;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.todo-actions button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 0.45rem 0.85rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 2.5rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.todo-actions button:hover,
+.todo-actions button:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+.todo-actions .todo-delete {
+  color: var(--danger);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.todo-actions .todo-delete:hover,
+.todo-actions .todo-delete:focus-visible {
+  border-color: var(--danger);
+  background-color: rgba(220, 38, 38, 0.12);
+}
+
+@media (max-width: 540px) {
+  body {
+    padding: 1.5rem 1rem;
+  }
+
+  .app {
+    padding: 1.75rem;
+    gap: 1.4rem;
+  }
+
+  .todo-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .todo-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .todo-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
