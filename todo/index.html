@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Todo List</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app" aria-labelledby="app-title">
+    <header class="app-header">
+      <h1 id="app-title">Todo List</h1>
+      <p class="app-subtitle">Stay on top of what matters.</p>
+    </header>
+    <form class="todo-form" autocomplete="off">
+      <label for="todo-input" class="todo-input-label">Add a todo</label>
+      <div class="todo-form-field">
+        <input id="todo-input" name="todo" type="text" placeholder="What needs to be done?" required>
+      </div>
+    </form>
+    <section class="todo-controls" aria-label="Todo controls">
+      <p class="todo-count" role="status" aria-live="polite">0 items left</p>
+      <div class="todo-filters" role="group" aria-label="Filter todos">
+        <button type="button" class="filter-button is-active" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" class="filter-button" data-filter="active" aria-pressed="false">Active</button>
+        <button type="button" class="filter-button" data-filter="completed" aria-pressed="false">Completed</button>
+      </div>
+      <button type="button" class="todo-clear" disabled>Clear completed</button>
+    </section>
+    <ul class="todo-list" aria-label="Todo items"></ul>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
