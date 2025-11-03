@@ -1,0 +1,26 @@
+问题描述
+当悬停在 IF 节点的 TRUE 连接线上时，FALSE 连接线目标节点的输入连接点也会错误地变成橙色。
+
+根本原因
+原来的实现只追踪了 `sourceNodeId` 和 `targetNodeId`，没有区分具体是哪个 source handle（`if` 还是 `else`），导致所有从同一源节点出发的连接线的目标节点都会高亮。
+解决方案
+
+EdgeHoverContext (`/contexts/EdgeHoverContext.tsx`)
+✅ 扩展状态，增加 `sourceHandle` 和 `targetHandle` 追踪
+✅ 更新 `setHoveredEdgeId` 接受 handle 参数
+✅ 更新 `getHandleColor` 接受 `handleId` 参数并进行精确匹配
+
+
+解决方案
+
+EdgeHoverContext (`/contexts/EdgeHoverContext.tsx`)
+✅ 扩展状态，增加 `sourceHandle` 和 `targetHandle` 追踪
+✅ 更新 `setHoveredEdgeId` 接受 handle 参数
+✅ 更新 `getHandleColor` 接受 `handleId` 参数并进行精确匹配
+
+CustomEdge (`/App.tsx`)
+✅ 从 EdgeProps 中提取 `sourceHandleId` 和 `targetHandleId`
+✅ 在调用 `setHoveredEdgeId` 时传递这些信息
+
+所有节点组件
+✅ IfNode: 为两个 source handle 分别调用 `getHandleColor('if')` 和 `getHandleColor('else')`
