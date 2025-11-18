@@ -1,0 +1,107 @@
+这是 ReactFlow 中常见的拖拽问题，主要有两个原因：
+
+## 1. **拖拽偏移问题**
+
+原因是没有正确计算鼠标位置相对于 ReactFlow 画布的坐标。
+
+**解决方法：**
+
+```javascript
+import { useReactFlow } from 'reactflow';
+
+const onDragOver = (event) => {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+};
+
+const onDrop = (event) => {
+  event.preventDefault();
+
+  const reactFlowBounds = event.target.getBoundingClientRect();
+  const type = event.dataTransfer.getData('application/reactflow');
+
+  // 关键：使用 project 方法将屏幕坐标转换为 ReactFlow 坐标
+  const position = reactFlowInstance.project({
+    x: event.clientX - reactFlowBounds.left,
+    y: event.clientY - reactFlowBounds.top,
+  });
+
+  const newNode = {
+    id: `node_${Date.now()}`,
+    type,
+    position,
+    data: { label: `${type} node` },
+  };
+
+  setNodes((nds) => nds.concat(newNode));
+};
+```
+
+## 2. **放大后无法拖拽到左侧区域**
+
+原因是缩放和平移后，坐标转换没有考虑当前的 viewport 状态。
+
+**完整解决方案：**
+
+```javascript
+import { useReactFlow } from 'reactflow';
+
+function FlowCanvas() {
+  const reactFlowInstance = useReactFlow();
+  const [nodes, setNodes] = useState([]);
+
+  const onDragOver = (event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  };
+
+  const onDrop = (event) => {
+    event.preventDefault();
+
+    const type = event.dataTransfer.getData('application/reactflow');
+    
+    if (!type) return;
+
+    // 使用 screenToFlowPosition 方法（推荐）
+    // 这个方法会自动处理缩放、平移等所有变换
+    const position = reactFlowInstance.screenToFlowPosition({
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    const newNode = {
+      id: `node_${Date.now()}`,
+      type,
+      position,
+      data: { label: `${type} node` },
+    };
+
+    setNodes((nds) => nds.concat(newNode));
+  };
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      onDrop={onDrop}
+      onDragOver={onDragOver}
+      onInit={setReactFlowInstance} // 或使用 useReactFlow hook
+    >
+      {/* ... */}
+    </ReactFlow>
+  );
+}
+```
+
+## 关键点总结：
+
+1. **使用 `screenToFlowPosition`**（ReactFlow v11+）或 `project` 方法来转换坐标
+2. **不要直接使用 `event.clientX/clientY`** 作为节点位置
+3. 确保在 `onDrop` 中调用 `event.preventDefault()`
+4. 使用 `useReactFlow` hook 获取 ReactFlow 实例，它会自动处理所有的坐标变换
+
+## 版本差异：
+
+- **ReactFlow v11+**: 使用 `screenToFlowPosition()`
+- **ReactFlow v10**: 使用 `project()` 方法
+
+这样就能解决拖拽偏移和缩放后无法拖拽的问题了。需要看你的具体代码吗？我可以帮你定位问题所在。
