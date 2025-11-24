@@ -1,0 +1,141 @@
+要在 Ant Design (Antd) 中修改侧边栏（Sider Menu）收起时自动出现的 Tooltip 样式，且**不污染全局**，主要取决于你使用的 Antd 版本。
+
+Antd 的侧边栏 Tooltip 是渲染在 `document.body` 下的（通过 Portal），因此普通的 CSS 父子嵌套无法直接选中它。
+
+以下是两种最有效的解决方案：
+
+-----
+
+### 方案一：使用 ConfigProvider (推荐 Antd v5+)
+
+如果你使用的是 **Ant Design v5**，最优雅的方法是使用 `ConfigProvider` 进行**局部主题覆盖**。你可以只将侧边栏 Menu 包裹在一个独立的 `ConfigProvider` 中，并修改其中的 Tooltip Token。
+
+这样做的好处是完全隔离，不需要写任何 CSS Hack。
+
+```jsx
+import React, { useState } from 'react';
+import { Menu, ConfigProvider, Button } from 'antd';
+import { AppstoreOutlined, MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons';
+
+const App = () => {
+  const [collapsed, setCollapsed] = useState(true);
+
+  const items = [
+    { key: '1', icon: <AppstoreOutlined />, label: 'Option 1' },
+    { key: '2', icon: <AppstoreOutlined />, label: 'Option 2' },
+  ];
+
+  return (
+    <div style={{ width: 256 }}>
+      <Button onClick={() => setCollapsed(!collapsed)} style={{ marginBottom: 16 }}>
+        {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+      </Button>
+
+      {/* 核心代码：只在这个 ConfigProvider 内部修改 Tooltip 样式 */}
+      <ConfigProvider
+        theme={{
+          components: {
+            Tooltip: {
+              colorBg: '#108ee9', // 修改背景色
+              colorText: '#fff',  // 修改文字颜色
+            },
+          },
+        }}
+      >
+        <Menu
+          defaultSelectedKeys={['1']}
+          mode="inline"
+          theme="dark"
+          inlineCollapsed={collapsed}
+          items={items}
+        />
+      </ConfigProvider>
+    </div>
+  );
+};
+
+export default App;
+```
+
+-----
+
+### 方案二：手动包裹 Tooltip (适用于 Antd v4 & v5)
+
+如果你无法使用 v5 的 Token 系统，或者需要更精细的控制（例如给 Tooltip 加特定的 `className`），最好的办法是**禁用 Menu 默认的 Tooltip，自己手动在 Icon 上包一层 Tooltip**。
+
+Menu 收起时会自动将 `label` 变成 Tooltip 内容。如果我们将 `label` 设为空或 null，并自己在 `icon` 上包裹 Tooltip，就能完全控制样式。
+
+```jsx
+import React, { useState } from 'react';
+import { Menu, Tooltip } from 'antd';
+import { UserOutlined, VideoCameraOutlined } from '@ant-design/icons';
+
+// 定义自定义 Tooltip 的样式类
+// 在 CSS 文件中： .my-sidebar-tooltip .ant-tooltip-inner { background-color: red; }
+
+const App = () => {
+  const [collapsed, setCollapsed] = useState(true);
+
+  // 根据 collapsed 状态动态生成 items
+  const items = [
+    {
+      key: '1',
+      // 如果收起：手动在 Icon 外面包一个 Tooltip，并指定 overlayClassName 或 color
+      // 如果展开：直接显示 Icon
+      icon: collapsed ? (
+        <Tooltip 
+          title="用户管理" 
+          placement="right" 
+          color="pink" // 直接用属性改颜色
+          overlayClassName="my-special-tooltip" // 或者加类名用 CSS 改
+        >
+          <UserOutlined />
+        </Tooltip>
+      ) : (
+        <UserOutlined />
+      ),
+      // 核心技巧：收起时 Label 留空，防止 Antd 生成默认的 Tooltip
+      label: collapsed ? null : '用户管理',
+    },
+    {
+      key: '2',
+      icon: collapsed ? (
+        <Tooltip title="视频监控" placement="right" color="#87d068">
+          <VideoCameraOutlined />
+        </Tooltip>
+      ) : (
+        <VideoCameraOutlined />
+      ),
+      label: collapsed ? null : '视频监控',
+    },
+  ];
+
+  return (
+    <div style={{ width: 256 }}>
+      <Menu
+        mode="inline"
+        inlineCollapsed={collapsed}
+        items={items}
+      />
+    </div>
+  );
+};
+```
+
+-----
+
+### 方案对比
+
+| 特性 | 方案一 (ConfigProvider) | 方案二 (手动包裹) |
+| :--- | :--- | :--- |
+| **适用版本** | Ant Design v5+ | v4, v5 均可 |
+| **复杂度** | 低 (配置即可) | 中 (需要处理 collapsed 逻辑) |
+| **原理** | 利用 Context 隔离样式变量 | 禁用默认行为，接管渲染 |
+| **灵活性** | 修改颜色、圆角等标准属性 | 极高，可完全自定义 Tooltip 内容 |
+
+### 总结
+
+  * **如果你用的是 Antd v5**：直接用 **方案一**，最省心，代码最干净。
+  * **如果你用的是 Antd v4**：使用 **方案二**。虽然需要写一点逻辑判断，但这是唯一能稳定控制收起状态下 Tooltip 样式且不影响全局的方法。
+
+**我可以为你写一段具体的 CSS 代码配合方案二使用吗？**
