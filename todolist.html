@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>待办事项</title>
+  <style>
+    :root {
+      color: #0f172a;
+      background: linear-gradient(180deg, #f7f8fc 0%, #eef1f7 100%);
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    .shell { max-width: 1080px; padding: 32px 20px 64px; margin: 0 auto; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    header h1 { margin: 0; font-size: 26px; letter-spacing: 0.5px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { padding: 9px 14px; border-radius: 14px; border: 1px solid #d5d9e5; background: #f7f8fc; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: #111827; box-shadow: 0 6px 12px rgba(15, 23, 42, 0.06); }
+    .btn:hover { background: #eceff5; }
+    .panel { background: #fff; border-radius: 18px; border: 1px solid #e6e8f0; box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08); }
+    .input-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 14px; }
+    .input-card input[type="text"] { flex: 1; height: 42px; border-radius: 12px; border: 1px solid #d5d9e5; padding: 0 12px; font-size: 14px; }
+    .priority-dots { display: inline-flex; gap: 10px; padding: 0 8px; }
+    .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+    .dot.high { background: #e2464d; }
+    .dot.medium { background: #e0a52a; }
+    .dot.low { background: #3b82f6; }
+    .dot.selected { border-color: #111827; box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.08); }
+    .add-btn { padding: 0 16px; height: 42px; border-radius: 12px; border: none; background: linear-gradient(135deg, #4f46e5, #6d28d9); color: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 10px 18px rgba(79, 70, 229, 0.25); }
+    .filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .segmented { display: inline-flex; gap: 8px; padding: 4px; background: #eef1f7; border-radius: 12px; border: 1px solid #d5d9e5; }
+    .segmented button { border: none; background: transparent; padding: 8px 14px; border-radius: 10px; cursor: pointer; font-weight: 700; color: #475569; }
+    .segmented button.active { background: #fff; box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08); color: #111827; }
+    .priority-filter { display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; background: #eef1f7; border-radius: 12px; border: 1px solid #d5d9e5; }
+    .priority-filter .label { font-weight: 700; color: #475569; }
+    .task-list { display: grid; gap: 14px; }
+    .task-card { padding: 16px; border-radius: 16px; border: 1px solid #e6e8f0; background: #fff; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.09); display: grid; gap: 12px; }
+    .task-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .task-title { font-weight: 800; font-size: 16px; color: #111827; word-break: break-word; }
+    .delete-btn { border: none; background: #eef1f7; color: #374151; padding: 8px 12px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .delete-btn:hover { background: #e2e7f0; }
+    .meta-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .pill { padding: 6px 12px; border-radius: 999px; font-weight: 800; font-size: 13px; color: #fff; display: inline-flex; align-items: center; gap: 6px; }
+    .pill.high { background: #e2464d; }
+    .pill.medium { background: #e0a52a; }
+    .pill.low { background: #3b82f6; }
+    .status-box { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid #d5d9e5; border-radius: 12px; background: #f7f8fc; }
+    .status-box select, .priority-select { border: 1px solid #d5d9e5; border-radius: 10px; padding: 6px 10px; background: #fff; }
+    .sub-box { background: #f5f6fb; border-radius: 12px; padding: 10px; border: 1px solid #e6e8f0; display: grid; gap: 8px; }
+    .sub-item { display: grid; grid-template-columns: 18px 1fr auto; align-items: start; gap: 8px; padding: 6px 4px; }
+    .sub-item .text { word-break: break-word; }
+    .sub-item img { max-width: 220px; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 6px 12px rgba(15, 23, 42, 0.06); cursor: pointer; }
+    .sub-delete { border: nonmhhm12ne; background: #fde2e2; color: #b91c1c; padding: 6px 8px; border-radius: 10px; cursor: pointer; }
+    .sub-textarea { width: 100%; min-height: 56px; border-radius: 10px; border: 1px solid #d5d9e5; padding: 8px 10px; font-size: 14px; resize: vertical; }
+    .sub-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+    .sub-btn { border: 1px solid #d5d9e5; background: #f7f8fc; color: #374151; padding: 6px 10px; border-radius: 10px; cursor: pointer; }
+    .sub-btn.danger { background: #fde2e2; color: #b91c1c; border-color: #fca5a5; }
+    .badge-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .empty { color: #94a3b8; font-size: 14px; margin: 0; }
+    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 50; }
+    .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.25); background: #fff; }
+    .lightbox:after { content: "点击关闭"; position: absolute; bottom: 24px; color: #e5e7eb; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel">
+    const { useEffect, useMemo, useState, useCallback } = React;
+
+    const DB_NAME = "priority-todo-db";
+    const STORE_NAME = "app";
+    const STORE_KEY = "tasks";
+    const PRIORITY_META = {
+      high: { label: "高", color: "#e2464d" },
+      medium: { label: "中", color: "#e0a52a" },
+      low: { label: "低", color: "#3b82f6" },
+    };
+    const PRIORITY_ORDER = ["high", "medium", "low"];
+    const STATUS_META = {
+      open: { label: "Open" },
+      in_progress: { label: "In progress" },
+      done: { label: "Done" },
+    };
+    const STATUS_ORDER = ["open", "in_progress", "done"];
+
+    const uid = () =>
+      (crypto.randomUUID && crypto.randomUUID()) ||
+      "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+
+    const openDB = () =>
+      new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: "id" });
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+    const readTasks = async () => {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+        const getReq = store.get(STORE_KEY);
+        getReq.onsuccess = () => resolve(getReq.result?.data || []);
+        getReq.onerror = () => reject(getReq.error);
+      });
+    };
+
+    const writeTasks = async (tasks) => {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        store.put({ id: STORE_KEY, data: tasks });
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    };
+
+    const PriorityDots = ({ value, onChange }) => (
+      <div className="priority-dots">
+        {PRIORITY_ORDER.map((p) => (
+          <div
+            key={p}
+            className={"dot " + p + (value === p ? " selected" : "")}
+            onClick={() => onChange(p)}
+            title={PRIORITY_META[p].label}
+          />
+        ))}
+      </div>
+    );
+
+    const insertToken = (text, token, start, end) =>
+      text.slice(0, start) + token + text.slice(end);
+
+    const extractDataUrlImages = (body) => {
+      if (!body) return { body: "", images: [] };
+      const images = [];
+      let newBody = body.replace(/!\[[^\]]*\]\((data:[^)]+)\)/g, (_m, src) => {
+        const id = uid();
+        images.push({ id, src });
+        return `[[img:${id}]]`;
+      });
+      return { body: newBody, images };
+    };
+
+    const SubtaskInput = ({ onAdd, disabled }) => {
+      const [text, setText] = useState("");
+      const [images, setImages] = useState([]);
+
+      const handleAdd = () => {
+        if (!text.trim() && !images.length) return;
+        onAdd({ body: text, images });
+        setText("");
+        setImages([]);
+      };
+
+      const handlePaste = (e) => {
+        const items = e.clipboardData?.items || [];
+        const imageItems = Array.from(items).filter((item) => item.type.startsWith("image/"));
+        if (!imageItems.length) return;
+        e.preventDefault();
+        const target = e.target;
+        const start = target.selectionStart ?? text.length;
+        const end = target.selectionEnd ?? start;
+        imageItems.forEach((imageItem) => {
+          const file = imageItem.getAsFile();
+          const reader = new FileReader();
+          reader.onload = () => {
+            const imgId = uid();
+            setImages((prev) => [...prev, { id: imgId, src: reader.result }]);
+            setText((prev) =>
+              insertToken(prev, `[[img:${imgId}]]`, start, end)
+            );
+          };
+          reader.readAsDataURL(file);
+        });
+      };
+
+      return (
+        <div className="sub-input" style={{ flexDirection: "column", alignItems: "stretch" }}>
+          <textarea
+            className="sub-textarea"
+            style={{ minHeight: "64px" }}
+            placeholder="添加子任务（文字与图片混排，粘贴图片自动插入）"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onPaste={handlePaste}
+            disabled={disabled}
+          />
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "6px" }}>
+            <button onClick={handleAdd} disabled={disabled}>添加</button>
+          </div>
+        </div>
+      );
+    };
+
+    const renderBody = (body, images, onPreviewImage) => {
+      // Also support直接包含 dataURL 的 markdown 图像
+      if (body && body.includes("data:image")) {
+        const migrated = extractDataUrlImages(body);
+        body = migrated.body;
+        images = [...images, ...migrated.images];
+      }
+      const parts = [];
+      const regex = /\[\[img:([^\]]+)\]\]/g;
+      let lastIndex = 0;
+      let match;
+      while ((match = regex.exec(body)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push({ type: "text", value: body.slice(lastIndex, match.index) });
+        }
+        parts.push({ type: "image", id: match[1] });
+        lastIndex = regex.lastIndex;
+      }
+      if (lastIndex < body.length) parts.push({ type: "text", value: body.slice(lastIndex) });
+
+      return parts.map((part, idx) => {
+        if (part.type === "image") {
+          const img = images.find((i) => i.id === part.id);
+          if (!img) return null;
+          return (
+            <div key={idx} style={{ marginTop: "6px" }}>
+              <img
+                src={img.src}
+                alt="子任务图片"
+                onClick={() => onPreviewImage?.(img.src, "子任务图片")}
+                title="点击放大预览"
+              />
+            </div>
+          );
+        }
+        const lines = part.value.split("\n");
+        return (
+          <div key={idx} style={{ whiteSpace: "pre-wrap" }}>
+            {lines.map((line, i) => (
+              <span key={i}>
+                {line}
+                {i < lines.length - 1 ? <br /> : null}
+              </span>
+            ))}
+          </div>
+        );
+      });
+    };
+
+    const SubtaskRow = ({ taskId, sub, onToggle, onDelete, onPreview, onUpdate }) => {
+      const [editing, setEditing] = useState(false);
+
+      const handlePaste = (e) => {
+        const items = e.clipboardData?.items || [];
+        const imageItems = Array.from(items).filter((item) => item.type.startsWith("image/"));
+        if (!imageItems.length) return;
+        e.preventDefault();
+        const target = e.target;
+        const start = target.selectionStart ?? sub.body.length;
+        const end = target.selectionEnd ?? start;
+        imageItems.forEach((imageItem) => {
+          const file = imageItem.getAsFile();
+          const reader = new FileReader();
+          reader.onload = () => {
+            const newId = uid();
+            onUpdate(taskId, sub.id, (prev) => ({
+              ...prev,
+              body: insertToken(prev.body || "", `[[img:${newId}]]`, start, end),
+              images: [...(prev.images || []), { id: newId, src: reader.result }],
+            }));
+          };
+          reader.readAsDataURL(file);
+        });
+      };
+
+      return (
+        <div className="sub-item">
+          <input
+            type="checkbox"
+            checked={!!sub.done}
+            onChange={() => onToggle(taskId, sub.id)}
+          />
+          <div className="text" style={{ width: "100%" }}>
+            {editing ? (
+              <>
+                <textarea
+                  className="sub-textarea"
+                  value={sub.body}
+                  onChange={(e) => onUpdate(taskId, sub.id, (prev) => ({ ...prev, body: e.target.value }))}
+                  onPaste={handlePaste}
+                  placeholder="子任务内容，支持粘贴多张图片（自动插入为占位符）"
+                />
+                <div style={{ marginTop: "6px", display: "flex", gap: "8px" }}>
+                  <button className="sub-btn" onClick={() => setEditing(false)}>完成</button>
+                  <button className="sub-btn" onClick={() => setEditing(false)}>取消</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ marginTop: "6px" }}>
+                  {renderBody(sub.body || "", sub.images || [], onPreview)}
+                </div>
+                <div style={{ marginTop: "6px" }}>
+                  <button className="sub-btn" onClick={() => setEditing(true)}>编辑</button>
+                </div>
+              </>
+            )}
+          </div>
+          <button className="sub-delete" onClick={() => onDelete(taskId, sub.id)}>删</button>
+        </div>
+      );
+    };
+
+    const TaskCard = ({
+      task,
+      onDelete,
+      onPriority,
+      onStatus,
+      onAddSub,
+      onToggleSub,
+      onDeleteSub,
+      onUpdateSub,
+      onPreviewImage,
+    }) => {
+      return (
+        <div className="task-card">
+          <div className="task-head">
+            <div className="task-title">{task.title}</div>
+            <button className="delete-btn" onClick={() => onDelete(task.id)}>🗑 删除</button>
+          </div>
+
+          <div className="meta-row">
+            <span className={"pill " + task.priority}>
+              {PRIORITY_META[task.priority]?.label || "未设定"}
+            </span>
+            <div className="status-box">
+              <label style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 700, color: "#475569" }}>
+                <input
+                  type="checkbox"
+                  checked={task.status === "done"}
+                  onChange={(e) => onStatus(task.id, e.target.checked ? "done" : "open")}
+                />
+                {STATUS_META[task.status]?.label || "Open"}
+              </label>
+              <select value={task.status} onChange={(e) => onStatus(task.id, e.target.value)}>
+                <option value="open">Open</option>
+                <option value="in_progress">In progress</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+            <div className="status-box">
+              <span style={{ fontWeight: 700, color: "#475569" }}>优先级</span>
+              <select
+                className="priority-select"
+                value={task.priority}
+                onChange={(e) => onPriority(task.id, e.target.value)}
+              >
+                <option value="high">高</option>
+                <option value="medium">中</option>
+                <option value="low">低</option>
+              </select>
+              <PriorityDots value={task.priority} onChange={(p) => onPriority(task.id, p)} />
+            </div>
+          </div>
+
+          <div className="sub-box">
+            {task.subtasks?.length ? (
+              task.subtasks.map((sub) => (
+                <SubtaskRow
+                  key={sub.id}
+                  taskId={task.id}
+                  sub={sub}
+                  onToggle={onToggleSub}
+                  onDelete={onDeleteSub}
+                  onPreview={onPreviewImage}
+                  onUpdate={onUpdateSub}
+                />
+              ))
+            ) : (
+              <span className="empty">暂无子任务</span>
+            )}
+            <SubtaskInput onAdd={(payload) => onAddSub(task.id, payload)} />
+          </div>
+        </div>
+      );
+    };
+
+    const App = () => {
+      const [tasks, setTasks] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [newTitle, setNewTitle] = useState("");
+      const [newPriority, setNewPriority] = useState("high");
+      const [statusFilter, setStatusFilter] = useState("all"); // all | unstarted | progress | done
+      const [priorityFilter, setPriorityFilter] = useState("all");
+      const [statusMsg, setStatusMsg] = useState("");
+      const [viewer, setViewer] = useState({ open: false, src: "", alt: "" });
+
+      const normalizeTasks = useCallback((list) =>
+        list.map((t) => {
+          const normalizedSubs = Array.isArray(t.subtasks)
+            ? t.subtasks.map((s) => {
+                const baseBody = s.body || s.title || "";
+                const baseImages = Array.isArray(s.images) ? s.images : s.image ? [{ id: uid(), src: s.image }] : [];
+                const merged = extractDataUrlImages(baseBody);
+                const imagesMap = [...baseImages, ...merged.images];
+                return {
+                  id: s.id || uid(),
+                  body: merged.body || "",
+                  images: imagesMap,
+                  done: !!s.done,
+                };
+              })
+            : [];
+          return {
+            id: t.id || uid(),
+            title: t.title || "",
+            priority: PRIORITY_ORDER.includes(t.priority) ? t.priority : "medium",
+            status: STATUS_ORDER.includes(t.status) ? t.status : t.done ? "done" : "open",
+            subtasks: normalizedSubs,
+            createdAt: t.createdAt || Date.now(),
+          };
+        }), []);
+
+      useEffect(() => {
+        readTasks()
+          .then((data) => setTasks(Array.isArray(data) ? normalizeTasks(data) : []))
+          .catch(() => setStatusMsg("读取本地数据失败"))
+          .finally(() => setLoading(false));
+      }, [normalizeTasks]);
+
+      useEffect(() => {
+        if (loading) return;
+        const handle = setTimeout(() => {
+          writeTasks(tasks).catch(() => setStatusMsg("保存到本地失败"));
+        }, 180);
+        return () => clearTimeout(handle);
+      }, [tasks, loading]);
+
+      const addTask = () => {
+        if (!newTitle.trim()) return;
+        const task = {
+          id: uid(),
+          title: newTitle.trim(),
+          priority: newPriority,
+          status: "open",
+          subtasks: [],
+          createdAt: Date.now(),
+        };
+        setTasks((prev) => [...prev, task]);
+        setNewTitle("");
+      };
+
+      const deleteTask = (id) => setTasks((prev) => prev.filter((t) => t.id !== id));
+
+      const updatePriority = (id, priority) =>
+        setTasks((prev) =>
+          prev.map((t) => (t.id === id ? { ...t, priority } : t))
+        );
+
+      const updateStatus = (id, status) =>
+        setTasks((prev) =>
+          prev.map((t) => (t.id === id ? { ...t, status } : t))
+        );
+
+      const addSubtask = (taskId, payload) =>
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === taskId
+              ? {
+                  ...t,
+                  subtasks: [
+                    ...(t.subtasks || []),
+                    {
+                      id: uid(),
+                      body: payload.body || "",
+                      images: payload.images || [],
+                      done: false,
+                    },
+                  ],
+                }
+              : t
+          )
+        );
+
+      const toggleSubtask = (taskId, subId) =>
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === taskId
+              ? { ...t, subtasks: t.subtasks.map((s) => (s.id === subId ? { ...s, done: !s.done } : s)) }
+              : t
+          )
+        );
+
+      const deleteSubtask = (taskId, subId) =>
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === taskId
+              ? { ...t, subtasks: t.subtasks.filter((s) => s.id !== subId) }
+              : t
+          )
+        );
+
+      const updateSubtask = (taskId, subId, patch) =>
+        setTasks((prev) =>
+          prev.map((t) => {
+            if (t.id !== taskId) return t;
+            return {
+              ...t,
+              subtasks: t.subtasks.map((s) => {
+                if (s.id !== subId) return s;
+                const next =
+                  typeof patch === "function"
+                    ? patch(s)
+                    : typeof patch === "string"
+                    ? { ...s, body: patch }
+                    : { ...s, ...patch };
+                const migrated = extractDataUrlImages(next.body);
+                const combinedImages = [...(next.images || []), ...migrated.images];
+                const bodyWithTokens = migrated.body;
+                const ids = new Set();
+                (bodyWithTokens || "").replace(/\[\[img:([^\]]+)\]\]/g, (_m, id) => {
+                  ids.add(id);
+                  return "";
+                });
+                const cleanedImages = combinedImages.filter((img) => ids.has(img.id));
+                return { ...next, body: bodyWithTokens, images: cleanedImages };
+              }),
+            };
+          })
+        );
+
+      const filteredTasks = useMemo(() => {
+        return tasks
+          .filter((t) => {
+            if (statusFilter === "all") return true;
+            if (statusFilter === "unstarted") return t.status === "open";
+            if (statusFilter === "progress") return t.status === "in_progress";
+            if (statusFilter === "done") return t.status === "done";
+            return true;
+          })
+          .filter((t) => (priorityFilter === "all" ? true : t.priority === priorityFilter))
+          .slice()
+          .sort(
+            (a, b) =>
+              PRIORITY_ORDER.indexOf(a.priority) - PRIORITY_ORDER.indexOf(b.priority) ||
+              STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) ||
+              (b.createdAt || 0) - (a.createdAt || 0)
+          );
+      }, [tasks, statusFilter, priorityFilter]);
+
+      const exportMarkdown = () => {
+        const lines = [];
+        lines.push("# 待办清单");
+        filteredTasks.forEach((task) => {
+          const checkbox = task.status === "done" ? "[x]" : "[ ]";
+          lines.push(`- ${checkbox} ${task.title} (${PRIORITY_META[task.priority]?.label || "未设定"} / ${STATUS_META[task.status]?.label || "Open"})`);
+          (task.subtasks || []).forEach((sub) => {
+            const subBox = sub.done ? "[x]" : "[ ]";
+            const rendered = (sub.body || "").replace(/\[\[img:([^\]]+)\]\]/g, (_m, id) => {
+              const img = (sub.images || []).find((i) => i.id === id);
+              return img ? `![image](${img.src})` : "";
+            });
+            const linesBody = rendered.split("\n");
+            const firstLine = linesBody.shift() || "";
+            lines.push(`  - ${subBox} ${firstLine}`);
+            linesBody.forEach((l) => lines.push(`    ${l}`));
+          });
+        });
+        const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `todo-${new Date().toISOString().slice(0, 10)}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const exportJson = () => {
+        const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `todo-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const exportExcel = () => {
+        const rows = [];
+        rows.push(["任务标题", "优先级", "状态", "子任务"]);
+        tasks.forEach((task) => {
+          const subs = (task.subtasks || []).map((s) => {
+            const rendered = (s.body || "").replace(/\[\[img:([^\]]+)\]\]/g, (_m, id) => {
+              const img = (s.images || []).find((i) => i.id === id);
+              return img ? "[图片]" : "";
+            });
+            return `${s.done ? "[x]" : "[ ]"} ${rendered}`.trim();
+          });
+          rows.push([
+            `"${task.title.replace(/"/g, '""')}"`,
+            PRIORITY_META[task.priority]?.label || "未设定",
+            STATUS_META[task.status]?.label || "Open",
+            `"${subs.join(" | ").replace(/"/g, '""')}"`,
+          ]);
+        });
+        const csv = rows.map((r) => r.join(",")).join("\n");
+        const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `todo-${new Date().toISOString().slice(0, 10)}.csv`; // Excel 可直接打开
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const importJson = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(reader.result);
+            if (!Array.isArray(parsed)) throw new Error("格式不正确");
+            setTasks(normalizeTasks(parsed));
+            setStatusMsg("导入成功");
+          } catch (err) {
+            setStatusMsg("导入失败: " + err.message);
+          }
+          event.target.value = "";
+        };
+        reader.readAsText(file);
+      };
+
+      const statusCounts = useMemo(() => {
+        return tasks.reduce(
+          (acc, t) => {
+            acc[t.status] = (acc[t.status] || 0) + 1;
+            return acc;
+          },
+          { open: 0, in_progress: 0, done: 0 }
+        );
+      }, [tasks]);
+
+      const openPreview = (src, alt) => setViewer({ open: true, src, alt });
+      const closePreview = () => setViewer({ open: false, src: "", alt: "" });
+
+      return (
+        <div className="shell">
+          <header>
+            <h1>待办事项</h1>
+            <div className="actions">
+              <button className="btn" onClick={exportMarkdown}>📄 导出 Markdown</button>
+              <button className="btn" onClick={exportJson}>📄 导出 JSON</button>
+              <button className="btn" onClick={exportExcel}>📄 导出 Excel</button>
+              <label className="btn" style={{ cursor: "pointer" }}>
+                ⬇ 导入 JSON
+                <input type="file" accept="application/json" style={{ display: "none" }} onChange={importJson} />
+              </label>
+            </div>
+          </header>
+
+          <div className="panel input-card">
+            <input
+              type="text"
+              placeholder="输入任务标题..."
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addTask()}
+            />
+            <PriorityDots value={newPriority} onChange={setNewPriority} />
+            <button className="add-btn" onClick={addTask}>添加</button>
+          </div>
+
+          <div className="filter-bar">
+            <div className="segmented">
+              <button className={statusFilter === "all" ? "active" : ""} onClick={() => setStatusFilter("all")}>全部</button>
+              <button className={statusFilter === "unstarted" ? "active" : ""} onClick={() => setStatusFilter("unstarted")}>未开始</button>
+              <button className={statusFilter === "progress" ? "active" : ""} onClick={() => setStatusFilter("progress")}>进行中</button>
+              <button className={statusFilter === "done" ? "active" : ""} onClick={() => setStatusFilter("done")}>已完成</button>
+            </div>
+            <div className="priority-filter">
+              <span className="label">优先级</span>
+              <button className="dot low" style={{ borderColor: priorityFilter === "all" ? "#111827" : "transparent" }} title="全部" onClick={() => setPriorityFilter("all")}></button>
+              {PRIORITY_ORDER.map((p) => (
+                <button
+                  key={p}
+                  className={"dot " + p}
+                  style={{ borderColor: priorityFilter === p ? "#111827" : "transparent" }}
+                  title={PRIORITY_META[p].label}
+                  onClick={() => setPriorityFilter(p)}
+                ></button>
+              ))}
+              <span style={{ marginLeft: 8, color: "#475569", fontWeight: 700 }}>
+                总 {tasks.length} · 未开始 {statusCounts.open} · In progress {statusCounts.in_progress} · Done {statusCounts.done}
+              </span>
+            </div>
+            {statusMsg && <span style={{ color: "#b91c1c", fontWeight: 700 }}>{statusMsg}</span>}
+          </div>
+
+          {loading ? (
+            <p>正在读取本地数据...</p>
+          ) : filteredTasks.length ? (
+            <div className="task-list">
+              {filteredTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onDelete={deleteTask}
+                  onPriority={updatePriority}
+                  onStatus={updateStatus}
+                  onAddSub={addSubtask}
+                  onToggleSub={toggleSubtask}
+                  onDeleteSub={deleteSubtask}
+                  onUpdateSub={updateSubtask}
+                  onPreviewImage={openPreview}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="empty">暂无任务，试着添加一个吧。</p>
+          )}
+
+          {viewer.open && (
+            <div className="lightbox" onClick={closePreview}>
+              <img src={viewer.src} alt={viewer.alt || "预览图"} />
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById("app"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
